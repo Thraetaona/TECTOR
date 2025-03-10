@@ -1,0 +1,32 @@
+# alire.ada.dev/docs/catalog-format-spec
+
+name = "tector"
+description = "Transmural EMR Characterization and Tomography via Object Reflectometry"
+version = "0.1.0-dev"
+
+authors = ["Fereydoun Memarzanjany"]
+maintainers = ["Fereydoun Memarzanjany <thraetaona@outlook.com>"]
+maintainers-logins = ["thraetaona"]
+
+licenses = "GPL-3.0-or-later"
+website = "https://github.com/Thraetaona/TECTOR"
+tags = ["sensor", "emr", "tomography", "reflectometry", "radio", "radar"]
+
+# executables = ["tector"]
+executables = ["uart_receiver"]
+
+
+# NOTE: I've configured these in the .gpr project file.
+# alire.ada.dev/docs/catalog-format-spec#build-profiles-and-switches
+# All switch categories also accept a custom list of switches:
+# gcc.gnu.org/onlinedocs/gnat_ugn/Alphabetical-List-of-All-Switches.html
+[build-switches]
+#"*".compile_checks = "Errors"
+#release.optimization = "Performance"
+#release.debug_info = "No"
+#release.runtime_checks = "None"
+
+[[depends-on]]
+#gnat_native = "^12.2.0"
+#gnatcoll = "^23.0.0"
+#gnat_serial_communications = "^1.0.0"

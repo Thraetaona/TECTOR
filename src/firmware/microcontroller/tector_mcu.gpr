@@ -1,0 +1,112 @@
+with "../tector_fw.gpr";
+
+project TECTOR_MCU is
+
+   for Languages   use ("C");
+   for Source_Dirs use ("./", "../common");
+   for Object_Dir  use "../../../obj/mcu";
+   for Exec_Dir    use "../../../out";
+
+   for Main use ("tector_mcu.c");
+
+   package Compiler is
+      -- Force TI ARM compiler instead of system GCC:
+      for Driver ("C") use TECTOR_Fw.ARM_Compiler_Driver;
+
+      for Required_Switches ("C") use ("");
+      for PIC_Option ("C") use ("");
+      for Dependency_Switches ("C") use ("");
+      for Dependency_Driver ("C") use ("");
+      for Leading_Required_Switches ("C") use ("");
+      for Response_File_Switches ("C") use ("");
+
+      for Mapping_File_Switches ("C") use ("");
+      for Mapping_Spec_Suffix ("C") use "";
+      for Mapping_Spec_Suffix ("C") use "";
+      for Config_File_Switches ("C") use ("");
+      for Config_Spec_File_Name ("Ada") use "";
+      for Config_Body_File_Name ("Ada") use "";
+      for Config_Spec_File_Name_Pattern ("Ada") use "";
+      for Include_Switches ("C") use ("");
+
+      for Default_Switches ("C") use (
+         --  Target/ABI/Optimization
+         "-mv7R4",
+         "--code_state=16",
+         "--float_support=VFPv3D16",
+         "-me",
+         "-O3",
+         "--opt_for_speed=5",
+
+         --  Additional include paths:
+         "--include_path=C:/Users/Thrae/workspace_ccstheia/mrr_18xx_mss",
+         "--include_path=C:/ti/mmwave_sdk_03_06_02_00-LTS",
+         "--include_path=C:/ti/mmwave_sdk_03_06_02_00-LTS/packages",
+         "--include_path=C:/ti/ti-cgt-arm_16.9.6.LTS/include",
+
+         --  Defines (macros):
+         "--define=_LITTLE_ENDIAN",
+         "--define=MMWAVE_L3RAM_NUM_BANK=8",
+         "--define=MMWAVE_SHMEM_TCMA_NUM_BANK=0",
+         "--define=MMWAVE_SHMEM_TCMB_NUM_BANK=0",
+         "--define=MMWAVE_SHMEM_BANK_SIZE=0x20000",
+         "--define=SOC_XWR18XX",
+         "--define=SUBSYS_MSS",
+         "--define=DOWNLOAD_FROM_CCS",
+         "--define=SHMEM_ALLOC=0x00000008",
+         "--define=DebugP_ASSERT_ENABLED",
+
+         --  Other compiler options:
+         "-g",
+         "--c99",
+         "--enum_type=int",
+         "--diag_warning=225",
+         "--diag_wrap=off",
+         "--display_error_number",
+         "--gen_func_subsections=on",
+         "--abi=eabi"
+      );
+   end Compiler;
+
+   package Linker is
+      for Driver use TECTOR_Fw.ARM_Compiler_Driver;
+
+      for Default_Switches ("C") use (
+         --  Basic linking:
+         "-z",
+         "-m'mrr_18xx_mss.map'",
+         "--heap_size=0x800",
+         "--stack_size=0x800",
+
+         --  Library/include paths for linking:
+         "-iC:/ti/ti-cgt-arm_16.9.6.LTS/lib",
+         "-iC:/ti/mmwave_sdk_03_06_02_00-LTS/packages/ti/control/mmwave/lib",
+         "-iC:/ti/mmwave_sdk_03_06_02_00-LTS/packages/ti/control/mmwavelink/lib",
+         "-iC:/ti/mmwave_sdk_03_06_02_00-LTS/packages/ti/drivers/crc/lib",
+         "-iC:/ti/mmwave_sdk_03_06_02_00-LTS/packages/ti/drivers/esm/lib",
+         "-iC:/ti/mmwave_sdk_03_06_02_00-LTS/packages/ti/drivers/gpio/lib",
+         "-iC:/ti/mmwave_sdk_03_06_02_00-LTS/packages/ti/drivers/osal/lib",
+         "-iC:/ti/mmwave_sdk_03_06_02_00-LTS/packages/ti/drivers/pinmux/lib",
+         "-iC:/ti/mmwave_sdk_03_06_02_00-LTS/packages/ti/drivers/mailbox/lib",
+         "-iC:/ti/mmwave_sdk_03_06_02_00-LTS/packages/ti/drivers/dma/lib",
+         "-iC:/ti/mmwave_sdk_03_06_02_00-LTS/packages/ti/drivers/soc/lib",
+         "-iC:/ti/mmwave_sdk_03_06_02_00-LTS/packages/ti/drivers/uart/lib",
+         "-iC:/ti/mmwave_sdk_03_06_02_00-LTS/packages/ti/drivers/canfd/lib",
+         "-iC:/ti/mmwave_sdk_03_06_02_00-LTS/packages/ti/utils/cli/lib",
+         "-iC:/ti/ti-cgt-arm_16.9.6.LTS/include",
+
+         -- Link-time macros and options:
+         "--reread_libs",
+         "--disable_auto_rts",
+         "--define=MMWAVE_L3RAM_SIZE=0x100000",
+         "--diag_warning=225",
+         "--diag_wrap=off",
+         "--display_error_number",
+         "--warn_sections",
+         "--xml_link_info='mrr_18xx_mss.xml'",
+         "--rom_model",
+         "--unused_section_elimination=on"
+      );
+   end Linker;
+
+end TECTOR_MCU;

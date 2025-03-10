@@ -1,0 +1,66 @@
+------------------------------------------------------------------------
+-- SPDX-License-Identifier: GPL-3.0-or-later                          --
+-- tector_dsp.gpr is a part of TECTOR.                                --
+------------------------------------------------------------------------
+
+with "../tector_fw.gpr";
+
+project TECTOR_DSP is
+
+   for Languages   use ("C");
+   for Source_Dirs use ("./", "../common");
+   for Object_Dir  use "../../../obj/dsp";
+   for Exec_Dir use "../../../out";
+   for Main use ("tector_dsp.c");
+
+
+   package Compiler is
+      -- Force the TI DSP compiler driver (instead of system gcc):
+      for Driver ("C") use TECTOR_Fw.DSP_Compiler_Driver;
+
+      for Dependency_Switches ("C") use ();
+      for Dependency_Driver ("C") use ();
+
+      -- TI compilers typically need "-c" up front to compile only:
+      for Leading_Required_Switches ("C") use ("-c");
+
+      -- Supply your own TI compiler flags here; for example:
+      for Default_Switches ("C") use (
+         "-mv6740",           -- DSP variant (adjust as needed)
+         "--abi=eabi",
+         "-O3",
+         "--opt_for_speed=5",
+         "--include_path=C:/ti/mathlib_c674x_3_1_2_1/packages",
+         "--define=SOC_XWR18XX",
+         "--define=SUBSYS_DSS",
+         "-g",                -- debug info
+         "--diag_warning=225",
+         "--diag_wrap=off",
+         "--display_error_number",
+         "--gen_func_subsections=on"
+      );
+   end Compiler;
+
+   package Linker is
+      -- Same TI driver for linking:
+      for Driver use TECTOR_Fw.DSP_Compiler_Driver;
+
+      -- Example linking flags; adapt to your memory map, library paths, etc.:
+      for Default_Switches ("C") use (
+         "-z",
+         "-mtector_dsp.map",
+         "--heap_size=0x800",
+         "--stack_size=0x800",
+         "-iC:/ti/ti-cgt-c6000_8.3.3/lib",
+         "--reread_libs",
+         "--display_error_number",
+         "--warn_sections",
+         "--unused_section_elimination=on"
+      );
+   end Linker;
+
+end TECTOR_DSP;
+
+------------------------------------------------------------------------
+-- END OF FILE: tector_dsp.gpr                                        --
+------------------------------------------------------------------------

@@ -1,0 +1,29 @@
+------------------------------------------------------------------------
+-- SPDX-License-Identifier: GPL-3.0-or-later                          --
+-- ti_toolchain.cgpr is a part of TECTOR.                             --
+------------------------------------------------------------------------
+
+--  https://www.adacore.com/gems/
+--    gem-104-gprbuild-and-configuration-files-part-1
+
+--  https://docs.adacore.com/gprbuild-docs/html/gprbuild_ug/
+--    companion_tools.html#configuration-file-reference
+
+
+configuration project TI_Toolchain is
+   package Compiler is
+      for Driver ("C") use "/usr/gnat/bin/gcc";
+      for Leading_Required_Switches ("C") use ("-c");
+      for Object_File_Suffix ("C") use ".o";
+      for Dependency_Switches ("C") use ("-MMD","-MF","");
+      for Include_Switches ("C") use ("-I");
+   end Compiler;
+   package Naming is
+      for Spec_Suffix ("C") use ".h";
+      for Body_Suffix ("C") use ".c";
+   end Naming;
+end TI_Toolchain;
+
+------------------------------------------------------------------------
+-- END OF FILE: ti_toolchain.cgpr                                     --
+------------------------------------------------------------------------

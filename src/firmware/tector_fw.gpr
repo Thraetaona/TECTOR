@@ -1,0 +1,46 @@
+------------------------------------------------------------------------
+-- SPDX-License-Identifier: GPL-3.0-or-later                          --
+-- tector_fw.gpr is a part of TECTOR.                                 --
+------------------------------------------------------------------------
+
+--  I thought about using a "configuration project" for this, but there
+--  doesn't seem to be a way to define a file other than "default.cgpr"
+--  for use in children projects (at least not without using command-
+--  line arguments).  "abstract projects" can do pretty much everything.
+--  TODO: It might be possible to use "for Switches (others) use
+--  ("-a", "-b", "-c");" to specify a configuration project file.
+--  https://www.adacore.com/gems/
+--    gem-104-gprbuild-and-configuration-files-part-1
+--  https://docs.adacore.com/gprbuild-docs/html/gprbuild_ug/
+--    companion_tools.html#configuration-file-reference
+
+
+abstract project TECTOR_Fw is
+   for Source_Files use ();  --  No sources, just definitions
+
+   for Config_Prj_File use "ti_toolchain.cgpr";
+
+   TI_Root_Dir       :=
+     external ("TI_ROOT_DIR", "C:/ti");
+   DSP_CGT_Version   :=
+     external ("DSP_CGT_VERSION", "8.3.3");
+   ARM_CGT_Version   :=
+     external ("ARM_CGT_VERSION", "16.9.6.LTS");
+   XDC_Tools_Version :=
+     external ("XDCTOOLS_VERSION", "3_50_08_24_core");
+
+   DSP_Toolchain_Bin :=
+     TI_Root_Dir & "/ti-cgt-c6000_" & DSP_CGT_Version & "/bin";
+   ARM_Toolchain_Bin :=
+     TI_Root_Dir & "/ti-cgt-arm_"   & ARM_CGT_Version & "/bin";
+   XDC_Tools_Dir     :=
+     TI_Root_Dir & "/xdctools_"     & XDC_Tools_Version;
+
+   DSP_Compiler_Driver := DSP_Toolchain_Bin & "/cl6x";
+   ARM_Compiler_Driver := ARM_Toolchain_Bin & "/armcl";
+   XDC_Tools_Script    := XDC_Tools_Dir & "/xs";
+end TECTOR_Fw;
+
+------------------------------------------------------------------------
+-- END OF FILE: tector_fw.gpr                                         --
+------------------------------------------------------------------------

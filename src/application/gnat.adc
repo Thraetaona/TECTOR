@@ -1,0 +1,17 @@
+-- ---------------------------------------------------------------------
+-- SPDX-License-Identifier: GPL-3.0-or-later                          --
+-- gnat.adc is a part of TECTOR.                                      --
+-- ---------------------------------------------------------------------
+
+--  https://docs.adacore.com/gnat_rm-docs/html/gnat_rm/
+--      gnat_rm/implementation_defined_pragmas.html
+
+--  https://docs.adacore.com/gnat_rm-docs/
+--      html/gnat_rm/gnat_rm/gnat_language_extensions.html
+--  https://gcc.gnu.org/onlinedocs/gnat_rm/
+--      How-to-activate-the-extended-GNAT-Ada-superset.html
+pragma Extensions_Allowed (On);
+
+-- ---------------------------------------------------------------------
+-- END OF FILE: gnat.adc                                              --
+-- ---------------------------------------------------------------------

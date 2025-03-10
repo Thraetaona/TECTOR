@@ -1,0 +1,234 @@
+------------------------------------------------------------------------
+-- SPDX-License-Identifier: GPL-3.0-or-later                          --
+-- tector.cgpr is a part of TECTOR.                                   --
+------------------------------------------------------------------------
+
+--  https://www.adacore.com/gems/
+--    gem-104-gprbuild-and-configuration-files-part-1
+
+--  https://docs.adacore.com/gprbuild-docs/html/gprbuild_ug/
+--    companion_tools.html#configuration-file-reference
+
+
+configuration project TECTOR is
+   ---------------------------------------------------------------------
+   -- Scenario Variables                                              --
+   ---------------------------------------------------------------------
+   type Target_Kind is ("mss", "dss");
+   Target : Target_Kind := external ("TARGET_KIND", "mss");
+
+   type Device_Type is ("xwr14xx", "xwr16xx", "xwr18xx", "xwr68xx");
+   Device : Device_Type := external ("MMWAVE_SDK_DEVICE", "xwr18xx");
+
+   ---------------------------------------------------------------------
+   -- Environment/Root Directories                                    --
+   ---------------------------------------------------------------------
+   TI_Root_Dir        :=
+      external ("TI_ROOT_DIR", "c:/ti");
+   MMWAVE_SDK_Version :=
+      external ("MMWAVE_SDK_VERSION", "03.06.02.00-LTS");
+   MMWAVE_SDK_Install :=
+      TI_Root_Dir & "/mmwave_sdk_" & MMWAVE_SDK_Version;
+
+   ARM_CGT_Version  := "16.9.6.LTS";
+   DSP_CGT_Version  := "8.3.3";
+   R4F_Toolchain    := TI_Root_Dir & "/ti-cgt-arm_" & ARM_CGT_Version;
+   C674_Toolchain   := TI_Root_Dir & "/ti-cgt-c6000_" & DSP_CGT_Version;
+
+   ---------------------------------------------------------------------
+   -- Common Paths (BIOS, XDC, DSPlib, MATHlib, etc.)                 --
+   ---------------------------------------------------------------------
+   BIOS_Version  := "6.73.01.01";
+   XDC_Version   := "3.50.08.24_core";
+
+   BIOS_Install  := TI_Root_Dir & "/bios_" & BIOS_Version & "/packages";
+   XDC_Install   := TI_Root_Dir & "/xdctools_" & XDC_Version;
+   DSPLIB_C64P   := TI_Root_Dir & "/dsplib_c64Px_3_4_0_0";
+   DSPLIB_C674X  := TI_Root_Dir & "/dsplib_c674x_3_4_0_0";
+   MATHLIB_C674X := TI_Root_Dir & "/mathlib_c674x_3_1_2_1";
+
+   ---------------------------------------------------------------------
+   -- Initialize Build Macros from environment                        --
+   ---------------------------------------------------------------------
+   Download_From_CCS := external("DOWNLOAD_FROM_CCS", "yes");
+   SHMEM_Alloc       := external("SHMEM_ALLOC", "0x00000008");
+
+   ---------------------------------------------------------------
+   -- 5) Common Compiler Settings
+   ---------------------------------------------------------------
+   package Compiler is
+      -- By default, we keep a placeholder for the "C" driver to
+      -- avoid errors if you compile non-C code or so. We override
+      -- it more accurately below if needed.
+      for Driver ("C") use "gcc";  -- Example placeholder
+
+      for Leading_Required_Switches ("C") use ("-c");
+      for Object_File_Suffix ("C") use ".o";
+      for Dependency_Switches ("C") use ("-MMD", "-MF", "");
+      for Include_Switches ("C") use ("-I");
+   end Compiler;
+
+   ---------------------------------------------------------------
+   -- 6) Package Naming for C files
+   ---------------------------------------------------------------
+   package Naming is
+      for Spec_Suffix ("C") use ".h";
+      for Body_Suffix ("C") use ".c";
+   end Naming;
+
+   ---------------------------------------------------------------
+   -- 7) Package Linker + Switches Determined by MSS vs. DSS
+   ---------------------------------------------------------------
+   package Linker is
+      for Driver use case Target is
+         when "mss" => R4F_Toolchain & "/bin/armcl";
+         when "dss" => C674_Toolchain & "/bin/cl6x";
+      end case;
+
+      for Required_Switches use case Target is
+         when "mss" =>
+           -- MSS (ARM R4F) linking
+           (
+             "-z",
+             "--heap_size=0x800",
+             "--stack_size=0x800",
+             "-i" & R4F_Toolchain & "/lib",
+             "-i" & MMWAVE_SDK_Install & "/packages/ti/control/mmwave/lib",
+             "-i" & MMWAVE_SDK_Install & "/packages/ti/control/mmwavelink/lib",
+             "-i" & MMWAVE_SDK_Install & "/packages/ti/drivers/crc/lib",
+             "-i" & MMWAVE_SDK_Install & "/packages/ti/drivers/esm/lib",
+             "-i" & MMWAVE_SDK_Install & "/packages/ti/drivers/gpio/lib",
+             "-i" & MMWAVE_SDK_Install & "/packages/ti/drivers/osal/lib",
+             "-i" & MMWAVE_SDK_Install & "/packages/ti/drivers/pinmux/lib",
+             "-i" & MMWAVE_SDK_Install & "/packages/ti/drivers/mailbox/lib",
+             "-i" & MMWAVE_SDK_Install & "/packages/ti/drivers/dma/lib",
+             "-i" & MMWAVE_SDK_Install & "/packages/ti/drivers/soc/lib",
+             "-i" & MMWAVE_SDK_Install & "/packages/ti/drivers/uart/lib",
+             "-i" & MMWAVE_SDK_Install & "/packages/ti/drivers/canfd/lib",
+             "-i" & MMWAVE_SDK_Install & "/packages/ti/utils/cli/lib",
+             "--reread_libs",
+             "--disable_auto_rts",
+             "--diag_warning=225",
+             "--diag_wrap=off",
+             "--display_error_number",
+             "--warn_sections",
+             "--rom_model",
+             "--unused_section_elimination=on"
+           );
+         when "dss" =>
+           -- DSS (C674x) linking
+           (
+             "-z",
+             "--heap_size=0x800",
+             "--stack_size=0x800",
+             "-i" & C674_Toolchain & "/lib",
+             "-i" & MMWAVE_SDK_Install & "/packages/ti/control/mmwave/lib",
+             "-i" & MMWAVE_SDK_Install & "/packages/ti/control/mmwavelink/lib",
+             "-i" & MMWAVE_SDK_Install & "/packages/ti/drivers/crc/lib",
+             "-i" & MMWAVE_SDK_Install & "/packages/ti/drivers/mailbox/lib",
+             "-i" & MMWAVE_SDK_Install & "/packages/ti/drivers/osal/lib",
+             "-i" & MMWAVE_SDK_Install & "/packages/ti/drivers/soc/lib",
+             "-i" & MMWAVE_SDK_Install & "/packages/ti/drivers/uart/lib",
+             "-i" & MMWAVE_SDK_Install & "/packages/ti/drivers/edma/lib",
+             "-i" & MMWAVE_SDK_Install & "/packages/ti/drivers/adcbuf/lib",
+             "-i" & MMWAVE_SDK_Install & "/packages/ti/alg/mmwavelib/lib",
+             "-i" & DSPLIB_C64P & "/packages/ti/dsplib/lib",
+             "-i" & MATHLIB_C674X & "/packages/ti/mathlib/lib",
+             "--reread_libs",
+             "--disable_auto_rts",
+             "--diag_warning=225",
+             "--diag_wrap=off",
+             "--display_error_number",
+             "--warn_sections",
+             "--ram_model",
+             "--unused_section_elimination=on"
+           );
+      end case;
+   end Linker;
+
+   ---------------------------------------------------------------
+   -- 8) Additional Conditionals: Overriding Compiler Driver & Flags
+   ---------------------------------------------------------------
+   package Builder is
+      -- You could define partial or post-compile commands here if you want
+      -- for Post_Compilation use "my_post_build_script.sh";
+      null;
+   end Builder;
+
+   ---------------------------------------------------------------
+   -- 9) You might define scenario-based overrides in the Compiler package
+   ---------------------------------------------------------------
+   package Compiler renames Compiler is
+      -- Overriding the driver depending on MSS vs. DSS
+      case Target is
+         when "mss" =>
+            for Driver ("C") use R4F_Toolchain & "/bin/armcl";
+            for Required_Switches ("C") use
+            (
+               "--code_state=16",
+               "--float_support=VFPv3D16",
+               "--abi=eabi",
+               "-me",
+               "-O3",
+               "--include_path=" & R4F_Toolchain & "/include",
+               "-D_LITTLE_ENDIAN",
+               "-D" & "SOC_" & Device,
+               "-D" & "SUBSYS_MSS",
+               "-D" & "DOWNLOAD_FROM_CCS=" & Download_From_CCS,
+               "-D" & "MMWAVE_L3RAM_NUM_BANK=8",
+               "-D" & "MMWAVE_SHMEM_TCMA_NUM_BANK=0",
+               "-D" & "MMWAVE_SHMEM_TCMB_NUM_BANK=0",
+               "-D" & "MMWAVE_SHMEM_BANK_SIZE=0x20000",
+               "-g",
+               "--diag_warning=225",
+               "--diag_wrap=off",
+               "--display_error_number",
+               "--gen_func_subsections=on",
+               "--enum_type=int",
+               "--c99"
+            );
+         when "dss" =>
+            for Driver ("C") use C674_Toolchain & "/bin/cl6x";
+            for Required_Switches ("C") use
+            (
+               "-mv6740",
+               "--abi=eabi",
+               "-mo",         -- from ccs projectspec: -mo or -ms (?)
+               "-O3",
+               "--gcc",       -- allow GCC style
+               "--include_path=" & C674_Toolchain & "/include",
+               "-D" & "SOC_" & Device,
+               "-D" & "SUBSYS_DSS",
+               "-D" & "ENABLE_ADVANCED_FRAME",
+               "-D" & "MMWAVE_L3RAM_NUM_BANK=8",
+               "-D" & "MMWAVE_SHMEM_BANK_SIZE=0x20000",
+               "-D" & "MMWAVE_L3RAM_SIZE=0x100000",
+               "-D" & "SHMEM_ALLOC=" & SHMEM_Alloc,
+               "-D" & "DOWNLOAD_FROM_CCS=" & Download_From_CCS,
+               "-D" & "DebugP_ASSERT_ENABLED",
+               "-g",
+               "--diag_warning=225",
+               "--diag_wrap=off",
+               "--display_error_number",
+               "--disable_push_pop",
+               "--obj_extension=.oe674"
+            );
+      end case;
+   end Compiler;
+
+   package Compiler is
+      for Driver ("C") use "/usr/gnat/bin/gcc";
+      for Leading_Required_Switches ("C") use ("-c");
+      for Object_File_Suffix ("C") use ".o";
+      for Dependency_Switches ("C") use ("-MMD","-MF","");
+      for Include_Switches ("C") use ("-I");
+   end Compiler;
+   package Naming is
+      for Spec_Suffix ("C") use ".h";
+      for Body_Suffix ("C") use ".c";
+   end Naming;
+end TECTOR;
+
+------------------------------------------------------------------------
+-- END OF FILE: tector.cgpr                                           --
+------------------------------------------------------------------------
